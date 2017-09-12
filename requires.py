@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import json
 import yaml
 
@@ -54,11 +55,18 @@ class KubernetesDeployerRequires(RelationBase):
         conv = self.conversation()
         conv.set_remote('external-service-requests', json.dumps(service_requests))
 
-    def get_services(self):
+    def get_services(self, filter=True):
         conv = self.conversation()
         remote_services = yaml.safe_load(
             conv.get_remote('services', "{}"))
-        return remote_services
+        if not filter:
+            return remote_services
+        filter = {}
+        unit = os.environ['JUJU_UNIT_NAME'].split('/')[0]
+        for key, value in remote_services.items():
+            if unit == key:
+                filter = value  # assumes only 1 service per unit
+        return filter
 
     def send_headless_service_request(self, service_requests):
         """ service_request: {
