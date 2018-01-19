@@ -1,4 +1,4 @@
 name: kubernetes-deployer
-summary: Interface to ask a kubernetes deployer to create resources
+summary: Interface to create resources via a kubernetes-deployer
 version: 1
 repo: https://github.com:tengu-team/interface-kubernetes-deployer.git

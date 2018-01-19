@@ -14,67 +14,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import json
-import yaml
-
-from charms.reactive import hook
-from charms.reactive import RelationBase
-from charms.reactive import scopes
+from charms.reactive import when_any
+from charms.reactive import set_flag, clear_flag
+from charms.reactive import Endpoint
 
 
-class KubernetesDeployerRequires(RelationBase):
-    scope = scopes.GLOBAL
+class KubernetesDeployerRequires(Endpoint):
 
-    @hook('{requires:kubernetes-deployer}-relation-{joined}')
-    def joined(self):
-        conv = self.conversation()
-        conv.set_state('{relation_name}.joined')
+    @when_any('endpoint.{endpoint_name}.joined')
+    def request_joined(self):
+        set_flag(self.expand_name('available'))
 
-    @hook('{requires:kubernetes-deployer}-relation-{changed}')
-    def changed(self):
-        conv = self.conversation()
-        conv.remove_state('{relation_name}.joined')
-        conv.set_state('{relation_name}.available')
+    @when_any('endpoint.{endpoint_name}.departed')
+    def request_departed(self):
+        clear_flag(self.expand_name('available'))
 
-    @hook('{requires:kubernetes-deployer}-relation-{departed,broken}')
-    def broken(self):
-        conv = self.conversation()
-        conv.remove_state('{relation_name}.joined')
-        conv.remove_state('{relation_name}.available')
+    @when_any('endpoint.{endpoint_name}.changed.status')
+    def new_status(self):
+        set_flag(self.expand_name('new-status'))
+        clear_flag(self.expand_name('changed.status'))
 
-    def send_external_service_requests(self, service_requests):
-        """ service_requests: [
-            {
-                unit: <unit_name>,
-                externalName: <ip or dns name>,
-                ports: [<port>, ...]
-            },
-        ]
-        """
-        conv = self.conversation()
-        conv.set_remote('external-service-requests', json.dumps(service_requests))
+    def get_status(self):
+        status = []
+        for relation in self.relations:
+            for unit in relation.units:
+                status.append({
+                    'status': unit.received['status'],
+                    'remote_unit_name': unit.unit_name,
+                })
+        return status
 
-    def get_services(self, filter=True):
-        conv = self.conversation()
-        remote_services = yaml.safe_load(
-            conv.get_remote('services', "{}"))
-        if not filter:
-            return remote_services
-        filter = {}
-        unit = os.environ['JUJU_UNIT_NAME'].split('/')[0]
-        for key, value in remote_services.items():
-            if unit == key:
-                filter = value  # assumes only 1 service per unit
-        return filter
-
-    def send_headless_service_request(self, service_requests):
-        """ service_request: {
-                unit: <unit_name>,
-                ips: [<ip>, ...],
-                port: <port>
-            }
-        """
-        conv = self.conversation()
-        conv.set_remote('headless-service-requests', json.dumps(service_requests))
-
+    def send_create_request(self, resource):
+        # Resource should be a list with dicts, one per resource
+        for relation in self.relations:
+            relation.to_publish['resource'] = resource

@@ -14,48 +14,38 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-import yaml
-from charmhelpers.core import hookenv
-from charms.reactive import hook
-from charms.reactive import RelationBase
-from charms.reactive import scopes
+from charms.reactive import when_any
+from charms.reactive import set_flag, clear_flag
+from charms.reactive import Endpoint
 
 
-class KubernetesDeployerProvides(RelationBase):
-    scope = scopes.UNIT
+class KubernetesDeployerProvides(Endpoint):
 
-    @hook('{provides:kubernetes-deployer}-relation-{joined,changed}')
-    def changed(self):
-        self.set_state('{relation_name}.available')
+    @when_any('endpoint.{endpoint_name}.joined')
+    def request_joined(self):
+        set_flag(self.expand_name('available'))
 
-    @hook('{provides:kubernetes-deployer}-relation-{departed}')
-    def broken(self):
-        self.remove_state('{relation_name}.available')
+    @when_any('endpoint.{endpoint_name}.departed')
+    def request_departed(self):
+        clear_flag(self.expand_name('available'))
 
-    @property
-    def external_service_requests(self):
-        requests = []
-        for conv in self.conversations():
-            conv_req = yaml.safe_load(
-                conv.get_remote('external-service-requests', "[]"))
-            if conv_req:
-                requests.append(conv_req)
-        return requests
+    @when_any('endpoint.{endpoint_name}.changed.resource')
+    def new_resource_request(self):
+        set_flag(self.expand_name('new-resource'))
+        clear_flag(self.expand_name('changed.resource'))
 
-    @property
-    def headless_service_requests(self):
-        requests = []
-        for conv in self.conversations():
-            conv_req = yaml.safe_load(
-                conv.get_remote('headless-service-requests', "{}"))
-            if conv_req:
-                requests.append(conv_req)
-        return requests
+    def get_resource_requests(self):
+        # Returns resource requests of ALL connected k8s charms
+        resource_requests = []
+        for relation in self.relations:
+            for unit in relation.units:
+                resource_requests.append({
+                    'resource': unit.received['resource'],
+                    'remote_unit_name': unit.unit_name
+                })
+        return resource_requests
 
-    def send_services(self, services):
-        """ There is no way to send each unit only the containers it requested due to limitations
-        in Juju. Even with scope=UNIT, the same data is still broadcasted to all units of a single
-        service. See https://tinyurl.com/hjwfwdn """
-        for conv in self.conversations():
-            conv.set_remote('services', json.dumps(services))
+    def send_status(self, status):
+        # Send status of the resources
+        for relation in self.relations:
+            relation.to_publish['status'] = status
