@@ -28,7 +28,6 @@ def status_update():
     endpoint = endpoint_from_flag('endpoint.{relation-name}.new-status')
     status = endpoint.get_status()
 ```
-`get_status()` returns per created resource the `kubectl get` output.
 
 ## Provides
 By providing  the `kubernetes-deployer` interface, your charm is providing access to a Kubernetes cluster that can be used to create resources.
