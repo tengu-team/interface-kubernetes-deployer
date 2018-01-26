@@ -1,6 +1,6 @@
 
 # Overview
-This interface is used for charm who want to depoy resources to a Kubernetes cluster via a [kubernetes-deployer](https://github.com/tengu-team/layer-kubernetes-deployer).
+This interface is used for charms who want to deploy / send resources to a Kubernetes cluster.
 
 # Usage
 ## Requires
