@@ -27,7 +27,9 @@ class KubernetesDeployerProvides(Endpoint):
 
     @when_any('endpoint.{endpoint_name}.departed')
     def request_departed(self):
-        clear_flag(self.expand_name('available'))
+        if not self.relations:
+            set_flag(self.expand_name('cleanup'))
+        clear_flag(self.expand_name('departed'))
 
     @when_any('endpoint.{endpoint_name}.changed.resource')
     def new_resource_request(self):
@@ -49,3 +51,8 @@ class KubernetesDeployerProvides(Endpoint):
         # Send status of the resources
         for relation in self.relations:
             relation.to_publish['status'] = status
+
+    def send_worker_ips(self, workers):
+        # Send Ips of k8s workers
+        for relation in self.relations:
+            relation.to_publish['workers'] = workers

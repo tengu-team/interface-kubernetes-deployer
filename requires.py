@@ -17,22 +17,27 @@
 from charms.reactive import when_any
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import Endpoint
+from charms.reactive import is_flag_set
 
 
 class KubernetesDeployerRequires(Endpoint):
 
-    @when_any('endpoint.{endpoint_name}.joined')
-    def request_joined(self):
+    @when_any('endpoint.{endpoint_name}.changed')
+    def deployer_changed(self):
         set_flag(self.expand_name('available'))
+        clear_flag(self.expand_name('changed'))
 
-    @when_any('endpoint.{endpoint_name}.departed')
-    def request_departed(self):
-        clear_flag(self.expand_name('available'))
-
-    @when_any('endpoint.{endpoint_name}.changed.status')
-    def new_status(self):
+    @when_any('endpoint.{endpoint_name}.changed.status',
+              'endpoint.{endpoint_name}.changed.workers')
+    def new_deployer(self):
         set_flag(self.expand_name('new-status'))
         clear_flag(self.expand_name('changed.status'))
+        clear_flag(self.expand_name('changed.workers'))
+
+    @when_any('endpoint.{endpoint_name}.departed')
+    def departed(self):
+        clear_flag(self.expand_name('available'))
+        clear_flag(self.expand_name('departed'))
 
     def get_status(self):
         status = []
@@ -43,6 +48,13 @@ class KubernetesDeployerRequires(Endpoint):
                     'remote_unit_name': unit.unit_name,
                 })
         return status
+
+    def get_worker_ips(self):
+        ips = []
+        for relation in self.relations:
+            for unit in relation.units:
+                ips = unit.received['workers']
+        return ips
 
     def send_create_request(self, resource):
         # Resource should be a list with dicts, one per resource
