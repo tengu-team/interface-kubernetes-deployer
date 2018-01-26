@@ -1,4 +1,5 @@
 
+
 # Overview
 This interface is used for charms who want to deploy / send resources to a Kubernetes cluster.
 
@@ -21,12 +22,13 @@ def deploy_app():
     endpoint.send_create_request(resources)
 ```
 
-The deployer will respond with a status of the resources by setting the state `endpoint.{relation-name}.new-status`.
+The deployer will respond with a status of the resources by setting the state `endpoint.{relation-name}.new-status`. The Kubernetes worker node ips are available via `get_worker_ips()`.
 ```python
 @when('endpoint.{relation-name}.new-status')
 def status_update():
     endpoint = endpoint_from_flag('endpoint.{relation-name}.new-status')
     status = endpoint.get_status()
+    ips = endpoint.get_worker_ips()
 ```
 
 ## Provides
