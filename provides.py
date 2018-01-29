@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from charms.reactive import when_any
+from charms.reactive import when_any, when_not
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import Endpoint
 
@@ -24,6 +24,10 @@ class KubernetesDeployerProvides(Endpoint):
     @when_any('endpoint.{endpoint_name}.joined')
     def request_joined(self):
         set_flag(self.expand_name('available'))
+
+    @when_not('endpoint.{endpoint_name}.joined')
+    def no_request_joined(self):
+        clear_flag(self.expand_name('available'))
 
     @when_any('endpoint.{endpoint_name}.departed')
     def request_departed(self):

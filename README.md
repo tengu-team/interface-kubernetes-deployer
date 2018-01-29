@@ -38,9 +38,9 @@ When the  `endpoint.{relation-name}.available` state is set, you can poll for re
 
 A trivial example is:
 ```python
-@when('endpoint-{relation-name}.available')
+@when('endpoint.{relation-name}.available')
 def check_resource_requests():
-    endpoint = endpoint_from_flag('endpoint-{relation-name}.available')
+    endpoint = endpoint_from_flag('endpoint.{relation-name}.available')
     resources = endpoint.get_resource_requests()
     # Do stuff with resource
     # Send status updates
@@ -49,6 +49,13 @@ def check_resource_requests():
 
 
 The `endpoint.{relation-name}.cleanup` is set when no more relations are set. Use this flag instead of `available` or `joined` if you don't want to wait for the `update-status` hook.
+```python
+@when('endpoint.{relation-name}.cleanup')
+def cleanup():
+    endpoint = endpoint_from_flag('endpoint.{relation-name}.cleanup')
+    # Cleanup
+    clear_flag('endpoint.{relation-name}.cleanup')
+```
 
 ## Authors
 
