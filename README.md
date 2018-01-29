@@ -5,7 +5,7 @@ This interface is used for charms who want to deploy / send resources to a Kuber
 
 # Usage
 ## Requires
-By requiring the `kubernetes-deployer` interface, your charm can create resources on a Kubernetes cluster.  As soon as the `endpoint.{relation-name}.available` state is, your charm can send resource requests via `send_create_request(request)`.
+By requiring the `kubernetes-deployer` interface, your charm can create resources on a Kubernetes cluster.  As soon as the `endpoint.{relation-name}.available` state is set, your charm can send resource requests via `send_create_request(request)`.
 
 `send_create_request(request)` expects `request` to be a list where each element is a dict which represents a resource.
 
@@ -46,6 +46,9 @@ def check_resource_requests():
     # Send status updates
     endpoint.send_status(status)
 ```
+
+
+The `endpoint.{relation-name}.cleanup` is set when no more relations are set. Use this flag instead of `available` or `joined` if you don't want to wait for the `update-status` hook.
 
 ## Authors
 
