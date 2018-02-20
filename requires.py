@@ -42,13 +42,15 @@ class KubernetesDeployerRequires(Endpoint):
         clear_flag(self.expand_name('departed'))
 
     def get_status(self):
-        status = []
+        status = {}
         for relation in self.relations:
             for unit in relation.units:
-                status.append({
+                if not unit.received['status']:
+                    continue
+                status ={
                     'status': unit.received['status'],
                     'remote_unit_name': unit.unit_name,
-                })
+                }
         return status
 
     def get_worker_ips(self):

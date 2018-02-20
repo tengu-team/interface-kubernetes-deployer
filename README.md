@@ -6,7 +6,7 @@ This interface is used for charms who want to deploy / send resources to a Kuber
 
 # Usage
 ## Requires
-By requiring the `kubernetes-deployer` interface, your charm can create resources on a Kubernetes cluster.
+By requiring the `kubernetes-deployer` interface, your charm can request resources for a Kubernetes cluster.
 
 This interface layer will set the following states, as appropriate:
 -  `endpoint.{relation-name}.available` flag is set when connected to a providing kubernetes-deployer charm.
