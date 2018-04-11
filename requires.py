@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+import os
 from charms.reactive import when_any, when_not
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import Endpoint
@@ -64,3 +64,15 @@ class KubernetesDeployerRequires(Endpoint):
         # Resource should be a list with dicts, one per resource
         for relation in self.relations:
             relation.to_publish['resource'] = resource
+            relation.to_publish['uuid'] = self.get_uuid()
+
+    def get_uuid(self):
+        """Returns a unique id for this juju application.
+        63 chars is max allowed for k8s label value, if
+        needed the model_uuid will be shortened.
+        """
+        max_chars = 63
+        model_uuid = os.environ['JUJU_MODEL_UUID']
+        juju_unit_name = os.environ['JUJU_UNIT_NAME'].split('/')[0]
+        remainder = max_chars - len(juju_unit_name) - 1
+        return model_uuid[0:remainder] + '.' + juju_unit_name

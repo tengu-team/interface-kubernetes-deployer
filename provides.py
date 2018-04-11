@@ -42,7 +42,8 @@ class KubernetesDeployerProvides(Endpoint):
             for unit in relation.units:
                 resource_requests.append({
                     'resource': unit.received['resource'],
-                    'remote_unit_name': unit.unit_name
+                    'remote_unit_name': unit.unit_name,
+                    'uuid': unit.received['uuid'],
                 })
         return resource_requests
 
