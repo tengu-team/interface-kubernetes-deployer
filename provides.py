@@ -50,7 +50,10 @@ class KubernetesDeployerProvides(Endpoint):
     def send_status(self, status):
         # Send status of the resources
         for relation in self.relations:
-            relation.to_publish['status'] = status
+            unit = relation.units[0]
+            uuid = unit.received['uuid']
+            if uuid in status:
+                relation.to_publish['status'] = status[uuid]
 
     def send_worker_ips(self, workers):
         # Send Ips of k8s workers
