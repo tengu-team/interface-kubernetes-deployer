@@ -44,6 +44,8 @@ class KubernetesDeployerProvides(Endpoint):
                     'resource': unit.received['resource'],
                     'remote_unit_name': unit.unit_name,
                     'uuid': unit.received['uuid'],
+                    'model_uuid': unit.received['model_uuid'],
+                    'juju_unit': unit.received['juju_unit'],
                 })
         return resource_requests
 
