@@ -13,6 +13,8 @@ This interface layer will set the following states, as appropriate:
 
 Use `send_create_request(request)` to send resource requests. `request` is expected to be a list where each element is a dict which represents a resource.
 
+Use `get_uuid()` to get the generated uuid for this relation. You can use this uuid as part of the name of the k8s resource. This will avoid conflicts even when cross model relations are used.
+
 As an example, if we would want to deploy resources defined in `charm_dir() + '/files/resources.yaml'`:
 ```python
 @when('endpoint.{relation-name}.available')
