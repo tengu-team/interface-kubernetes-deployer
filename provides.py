@@ -30,10 +30,12 @@ class KubernetesDeployerProvides(Endpoint):
         clear_flag(self.expand_name('available'))
         clear_flag(self.expand_name('departed'))
 
-    @when_any('endpoint.{endpoint_name}.changed.resource')
-    def new_resource_request(self):
-        set_flag(self.expand_name('new-resource'))
-        clear_flag(self.expand_name('changed.resource'))
+    @when_any('endpoint.{endpoint_name}.changed',
+              'endpoint.{endpoint_name}.departed')
+    def resources_changed(self):
+        set_flag(self.expand_name('resources-changed'))
+        clear_flag(self.expand_name('changed'))
+        clear_flag(self.expand_name('departed'))
 
     def get_resource_requests(self):
         # Returns resource requests of ALL connected k8s charms
