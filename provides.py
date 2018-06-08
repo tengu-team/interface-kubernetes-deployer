@@ -42,22 +42,29 @@ class KubernetesDeployerProvides(Endpoint):
         resource_requests = []
         for relation in self.relations:
             for unit in relation.units:
-                resource_requests.append({
-                    'resource': unit.received['resource'],
-                    'remote_unit_name': unit.unit_name,
-                    'uuid': unit.received['uuid'],
-                    'model_uuid': unit.received['model_uuid'],
-                    'juju_unit': unit.received['juju_unit'],
-                })
-        return resource_requests
+                # Only add actual requests
+                if unit.received['resource']:
+                    resource_requests.append({
+                        'resource': unit.received['resource'],
+                        'remote_unit_name': unit.unit_name,
+                        'uuid': unit.received['uuid'],
+                        'model_uuid': unit.received['model_uuid'],
+                        'juju_unit': unit.received['juju_unit'],
+                    })
+        # Remove duplicate entries
+        unique_requests = []
+        for request in resource_requests:
+            if request not in unique_requests:
+                unique_requests.append(request)
+        return unique_requests
 
     def send_status(self, status):
         # Send status of the resources
         for relation in self.relations:
-            unit = relation.units[0]
-            uuid = unit.received['uuid']
-            if uuid in status:
-                relation.to_publish['status'] = status[uuid]
+            for unit in relation.units:
+                uuid = unit.received['uuid']
+                if uuid in status:
+                    relation.to_publish['status'] = status[uuid]
 
     def send_worker_ips(self, workers):
         # Send Ips of k8s workers
