@@ -38,25 +38,39 @@ class KubernetesDeployerProvides(Endpoint):
         clear_flag(self.expand_name('departed'))
 
     def get_resource_requests(self):
-        # Returns resource requests of ALL connected k8s charms
-        resource_requests = []
+        """
+        Returns a dict for resource requests with the following format:
+        {
+            'uuid': {
+                'model_uuid': 'abc',
+                'juju_unit': 'kci',
+                'requests': [
+                    {r1},
+                    {r2},
+                    {r3},
+                ]
+            }
+        }
+        """
+        requests = {}
         for relation in self.relations:
             for unit in relation.units:
-                # Only add actual requests
-                if unit.received['resource']:
-                    resource_requests.append({
-                        'resource': unit.received['resource'],
-                        'remote_unit_name': unit.unit_name,
-                        'uuid': unit.received['uuid'],
+                # Only requests with actual 'resource' fields are valid
+                if not unit.received['resource']:
+                    continue
+                uuid = unit.received['uuid']
+                if uuid not in requests:
+                    requests[uuid] = {
                         'model_uuid': unit.received['model_uuid'],
                         'juju_unit': unit.received['juju_unit'],
-                    })
-        # Remove duplicate entries
-        unique_requests = []
-        for request in resource_requests:
-            if request not in unique_requests:
-                unique_requests.append(request)
-        return unique_requests
+                        'requests': []
+                    }
+                # Prevent duplicate resources if multiple units from
+                # the same charm request the same resource
+                for res in unit.received['resource']:
+                    if res not in requests[uuid]['requests']:
+                        requests[uuid]['requests'].append(res)
+        return requests
 
     def send_status(self, status):
         # Send status of the resources
