@@ -28,7 +28,6 @@ class KubernetesDeployerProvides(Endpoint):
     @when_not('endpoint.{endpoint_name}.joined')
     def no_request_joined(self):
         clear_flag(self.expand_name('available'))
-        clear_flag(self.expand_name('departed'))
 
     @when_any('endpoint.{endpoint_name}.changed',
               'endpoint.{endpoint_name}.departed')
