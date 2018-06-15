@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
-import uuid
+import hashlib
 from charms.reactive import when_any, when_not
 from charms.reactive import set_flag, clear_flag
 from charms.reactive import Endpoint
@@ -72,10 +72,17 @@ class KubernetesDeployerRequires(Endpoint):
 
     def get_uuid(self):
         """
-        Returns a UUID for this juju application.
+        Returns a UUID for this juju application by 
+        taking the MD5 hash of the juju application name.
+
+        The juju model uuid + juju application name is used 
+        to prevent cross model collisions.
         """
         k8s_uuid = unitdata.kv().get('k8s_uuid', None)
         if not k8s_uuid:
-            k8s_uuid = uuid.uuid4().hex
+            juju_model = os.environ['JUJU_MODEL_UUID']
+            juju_app_name = os.environ['JUJU_UNIT_NAME'].split('/')[0]
+            unique_name = juju_model + juju_app_name
+            k8s_uuid = hashlib.md5(unique_name.encode('utf-8')).hexdigest()
             unitdata.kv().set('k8s_uuid', k8s_uuid)
         return k8s_uuid
